@@ -10,8 +10,11 @@
 #include <fstream>
 #include <String>
 #include <exception>
-#include <unordered_map>
+#include <tuple>
+#include <vector>
+#include <map>
 
+#define MAX_RAM 500000000
 
 typedef unsigned __int64 uint64;
 typedef unsigned uint;
@@ -41,7 +44,7 @@ int main(int argc, char *argv[])
 		std::cout << "Enter mapfile and datafile\n.";
 		return 1;
 	}
-	std::unordered_map<uint64, int> edges;
+	
 	FILE *inMap, *inData;
 	errno_t errMap, errData;
 	//errMap = fopen_s(&inMap, argv[1], "rb");
@@ -55,11 +58,12 @@ int main(int argc, char *argv[])
 		std::cerr << "Can't open input file " << argv[2] << std::endl;
 	}
 	uint64 off = 0;
-	char *buf=(char *)malloc(50000*sizeof(char));   // file contents are here
-	uint64 size = 50000;
+	char *buf=(char *)malloc(MAX_RAM*sizeof(char));   // file contents are here
+	uint64 size = MAX_RAM;
 	size_t success;
-	
 	success = fread(buf, sizeof(char), size, inData);
+	std::vector<std::tuple<uint64, int>> edges;
+	
 	//success = fread(buf, sizeof(char), size, inMap);
 	try {
 		
@@ -75,15 +79,7 @@ int main(int argc, char *argv[])
 				for (int i = 0; i < hg->len; i++)
 				{
 					printf("  %I64u\n", neighbors[i]);
-					std::unordered_map<uint64, int>::iterator check = edges.find(neighbors[i]);
-					if (check == edges.end())
-					{
-						edges[neighbors[i]] = 1;
-					}
-					else
-					{
-						check->second++;
-					}
+					edges.push_back(std::make_tuple(neighbors[i], 1));
 				}
 			}
 			else
@@ -130,9 +126,9 @@ int main(int argc, char *argv[])
 	{
 		std::cerr << e.what();
 	}
-	std::unordered_map<uint64,int>::const_iterator iter ;
-	for (iter = edges.begin(); iter != edges.end(); iter++)
-		std::cout << iter->first << " " << iter->second << std::endl;
+	std::vector<std::tuple<uint64, int>>::const_iterator iter(edges.begin());
+	for (; iter != edges.end(); iter++)
+		std::cout << std::get<0>(*iter)<<std::get<1>(*iter)<<std::endl;
 	getchar();
 
 }
