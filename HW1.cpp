@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
+#include <Psapi.h>
 
 #define MAX_RAM 250000
 
@@ -38,29 +39,61 @@ public:
 #pragma pack(pop) 
 
 
+// Custom comparator function for std::sort
 bool vecSort(std::pair<uint64, int> &firstElem, std::pair<uint64, int> &secondElem)
 {
 	 return firstElem.second > secondElem.second;
 }
 
 
+//These two incomplete functions were meant to make reading and parsing of data smoother
+/*
+void newfunc(char *buffer, bytesToRead, FileHandle, map &reference);
+
+
+void readMyHandle(FILE *myHandle, )
+{
+
+uint64 off = 0;
+char *buf=(char *)malloc(MAX_RAM*sizeof(char));   // file contents are here
+uint64 size = MAX_RAM;
+size_t success;
+
+At this point, call new function that does the reading and parsing
+newfunc(buf,size, InData)
+success = fread(buf, sizeof(char), size, inData, MAP reference);
+
+
+
+}
+
+void newfunc(char *buffer, bytesToRead, FileHandle, map &reference)
+{
+
+
+
+
+}
+
+
+*/
 int main(int argc, char *argv[])
 {
 
-	if(argc!=3)
+	if(argc!=2)
 	{
-		std::cout << "Enter mapfile and datafile\n.";
+		std::cout << "Enter only the name of the outgraph\n.";
 		return 1;
 	}
 	
 	FILE *inMap, *inData;
 	errno_t errMap, errData;
-	//errMap = fopen_s(&inMap, argv[1], "rb");
-	errData = fopen_s(&inData, argv[2], "rb");
+	//errMap = fopen_s(&inMap, 'C:\Users\tvish_000\Downloads\PLD-map-(1).dat', "rb");
+	errData = fopen_s(&inData, argv[1], "rb");
 	
 	//if (errMap)
 	//{
-	//	std::cerr << "Can't open input file " << argv[1]<<std::endl;
+	//	std::cerr << "Can't open input map file " <<std::endl;
 	//}
 
 	if (errData)
@@ -72,15 +105,13 @@ int main(int argc, char *argv[])
 	uint64 size = MAX_RAM;
 	size_t success;
 	success = fread(buf, sizeof(char), size, inData);
+
 	std::map<uint64, int> edges;
 	
 	
 	//success = fread(buf, sizeof(char), size, inMap);
 
 
-
-	//NOTE: Code currently has no way of jumping back into the while loop just below with off<size test. Need to figure that
-	//out - 17:18. 9/28
 	try {
 		std::map<uint64, int>::iterator it;
 		while (off < size - sizeof(HeaderGraph))
@@ -153,13 +184,14 @@ int main(int argc, char *argv[])
 		std::cerr << e.what();
 	}	
 	std::vector<std::pair<uint64, int > > myVec(edges.begin(), edges.end());
-	std::cout << myVec.size();
+	//std::cout << myVec.size();
 	std::sort(myVec.begin(), myVec.end(), vecSort);
-	for (int i = 0; i < myVec.size(); i++)
-	{
-		std::cout << myVec[i].first << " - " << myVec[i].second << std::endl;
-		system("pause");
-	}
+	
+	PROCESS_MEMORY_COUNTERS pp;
+	HANDLE hProcess = GetCurrentProcess();
+	if (GetProcessMemoryInfo(hProcess, &pp, sizeof(PROCESS_MEMORY_COUNTERS)) == FALSE)
+		std::cout << "\nBoo hoo\n";
+	printf("Peak working set : %zu\n   %0.2f", pp.PeakWorkingSetSize, (pp.PeakWorkingSetSize/1000000.0));
 	getchar();
 
 }
